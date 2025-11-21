@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\ProductVariant;
+use App\Models\User;
 use App\Services\VariantService;
 use Illuminate\Http\Request;
 
@@ -26,6 +27,8 @@ class ProductVariantController extends Controller
 
     public function store(Request $request, Product $product)
     {
+        $this->authorizeProduct($request->user('api'), $product);
+
         $data = $request->validate([
             'name'        => ['nullable', 'string', 'max:255'],
             'sku'         => ['nullable', 'string', 'max:255', 'unique:product_variants,sku'],
@@ -56,6 +59,8 @@ class ProductVariantController extends Controller
             abort(404);
         }
 
+        $this->authorizeProduct($request->user('api'), $product);
+
         $data = $request->validate([
             'name'        => ['nullable', 'string', 'max:255'],
             'sku'         => ['nullable', 'string', 'max:255', 'unique:product_variants,sku,'.$variant->id],
@@ -76,8 +81,29 @@ class ProductVariantController extends Controller
             abort(404);
         }
 
+        $this->authorizeProduct(auth('api')->user(), $product);
+
         $this->variants->delete($variant);
 
         return response()->json(null, 204);
+    }
+
+    protected function authorizeProduct(?User $user, Product $product): void
+    {
+        if (! $user || ! $user->role) {
+            abort(403);
+        }
+
+        $role = $user->role->name;
+
+        if ($role === 'Admin') {
+            return;
+        }
+
+        if ($role === 'Vendor' && $product->user_id === $user->id) {
+            return;
+        }
+
+        abort(403);
     }
 }

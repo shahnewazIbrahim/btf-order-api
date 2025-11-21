@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\ProductResource;
 use App\Jobs\ImportProductsFromCsv;
 use App\Models\Product;
+use App\Models\User;
 use App\Repositories\ProductRepository;
 use App\Services\ProductService;
 use Illuminate\Http\Request;
@@ -46,7 +47,7 @@ class ProductController extends Controller
             'is_active'  => 'boolean',
         ]);
 
-        $data['user_id'] = $request->user()->id;
+        $data['user_id'] = $request->user('api')->id;
 
         $product = $this->service->create($data);
 
@@ -60,6 +61,8 @@ class ProductController extends Controller
 
     public function update(Request $request, Product $product)
     {
+        $this->authorizeProduct($request->user('api'), $product);
+
         $data = $request->validate([
             'name'       => 'sometimes|string|max:255',
             'description' => 'nullable|string',
@@ -74,6 +77,8 @@ class ProductController extends Controller
 
     public function destroy(Product $product)
     {
+        $this->authorizeProduct(auth('api')->user(), $product);
+
         $this->service->delete($product);
 
         return response()->json(null, 204);
@@ -99,5 +104,24 @@ class ProductController extends Controller
         return response()->json([
             'message' => 'Import queued. Products will be created in background.',
         ], 202);
+    }
+
+    protected function authorizeProduct(?User $user, Product $product): void
+    {
+        if (! $user || ! $user->role) {
+            abort(403);
+        }
+
+        $role = $user->role->name;
+
+        if ($role === 'Admin') {
+            return;
+        }
+
+        if ($role === 'Vendor' && $product->user_id === $user->id) {
+            return;
+        }
+
+        abort(403);
     }
 }

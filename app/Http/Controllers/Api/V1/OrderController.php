@@ -2,17 +2,19 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Actions\Orders\CreateOrder;
+use App\Actions\Orders\UpdateOrderStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\OrderResource;
 use App\Models\Order;
-use App\Services\OrderService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 
 class OrderController extends Controller
 {
     public function __construct(
-        protected OrderService $service
+        protected CreateOrder $createOrder,
+        protected UpdateOrderStatus $updateOrderStatus
     ) {}
 
     public function index(Request $request)
@@ -26,10 +28,8 @@ class OrderController extends Controller
             $role = $user->role->name ?? null;
 
             if ($role === 'Customer') {
-                // শুধু নিজের অর্ডার
                 $query->where('customer_id', $user->id);
             } elseif ($role === 'Vendor') {
-                // vendor যেসব product এর owner সেসব অর্ডার
                 $query->whereHas('items.product', function ($q) use ($user) {
                     $q->where('user_id', $user->id);
                 });
@@ -47,6 +47,8 @@ class OrderController extends Controller
 
     public function store(Request $request)
     {
+        $this->authorizeOrderPlacement($request->user('api'));
+
         $data = $request->validate([
             'discount'     => 'nullable|numeric|min:0',
             'items'        => 'required|array|min:1',
@@ -56,17 +58,14 @@ class OrderController extends Controller
             'items.*.price'       => 'required|numeric|min:0',
         ]);
 
-        $order = $this->service->create($data, $request->user('api'));
+        $order = ($this->createOrder)($data, $request->user('api'));
 
         return response()->json($order, 201);
     }
 
     public function show(Order $order, Request $request)
     {
-        // simple check: শুধুই নিজের order দেখতে পারবে (Admin হলে ছাড় দিতে পারো)
-        if ($order->customer_id !== $request->user('api')->id) {
-            return response()->json(['message' => 'Forbidden'], 403);
-        }
+        $this->authorizeOrderView($request->user('api'), $order);
 
         return response()->json($order->load('items.product', 'items.variant'));
     }
@@ -77,14 +76,15 @@ class OrderController extends Controller
             'status' => 'required|string',
         ]);
 
-        // এখানে role check করতে পারো (Vendor/Admin)
-        $order = $this->service->updateStatus($order, $data['status']);
+        $this->authorizeOrderStatusUpdate($request->user('api'), $order);
+        $order = ($this->updateOrderStatus)($order, $data['status']);
 
         return response()->json($order);
     }
 
     public function invoice(Order $order)
     {
+        $this->authorizeOrderView(auth('api')->user(), $order);
         $order->load('customer', 'items.product', 'items.variant');
 
         $pdf = Pdf::loadView('pdf.invoice', [
@@ -92,5 +92,72 @@ class OrderController extends Controller
         ]);
 
         return $pdf->download("invoice-{$order->id}.pdf");
+    }
+
+    protected function authorizeOrderPlacement($user): void
+    {
+        if (! $user || ! $user->role) {
+            abort(403, 'Unauthorized');
+        }
+
+        $role = $user->role->name;
+
+        if (! in_array($role, ['Customer', 'Admin'], true)) {
+            abort(403, 'Only customers can place orders');
+        }
+    }
+
+    protected function authorizeOrderView($user, Order $order): void
+    {
+        if (! $user || ! $user->role) {
+            abort(403);
+        }
+
+        $role = $user->role->name;
+
+        if ($role === 'Admin') {
+            return;
+        }
+
+        if ($role === 'Customer' && $order->customer_id === $user->id) {
+            return;
+        }
+
+        if ($role === 'Vendor') {
+            $hasVendorItem = $order->items()
+                ->whereHas('product', fn($q) => $q->where('user_id', $user->id))
+                ->exists();
+
+            if ($hasVendorItem) {
+                return;
+            }
+        }
+
+        abort(403);
+    }
+
+    protected function authorizeOrderStatusUpdate($user, Order $order): void
+    {
+        if (! $user || ! $user->role) {
+            abort(403);
+        }
+
+        $role = $user->role->name;
+
+        if ($role === 'Admin') {
+            return;
+        }
+
+        if ($role === 'Vendor') {
+            $hasVendorItem = $order->items()
+                ->whereHas('product', fn($q) => $q->where('user_id', $user->id))
+                ->exists();
+
+            if ($hasVendorItem) {
+                return;
+            }
+        }
+
+        abort(403);
     }
 }

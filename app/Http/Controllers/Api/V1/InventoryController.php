@@ -6,6 +6,7 @@ use App\Events\InventoryLowStock;
 use App\Http\Controllers\Controller;
 use App\Models\Inventory;
 use App\Models\ProductVariant;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class InventoryController extends Controller
@@ -27,6 +28,8 @@ class InventoryController extends Controller
 
     public function update(Request $request, ProductVariant $variant)
     {
+        $this->authorizeVariant($request->user('api'), $variant);
+
         $data = $request->validate([
             'stock'               => ['required', 'integer', 'min:0'],
             'low_stock_threshold' => ['nullable', 'integer', 'min:0'],
@@ -49,5 +52,24 @@ class InventoryController extends Controller
         }
 
         return response()->json($inventory);
+    }
+
+    protected function authorizeVariant(?User $user, ProductVariant $variant): void
+    {
+        if (! $user || ! $user->role) {
+            abort(403);
+        }
+
+        $role = $user->role->name;
+
+        if ($role === 'Admin') {
+            return;
+        }
+
+        if ($role === 'Vendor' && $variant->product->user_id === $user->id) {
+            return;
+        }
+
+        abort(403);
     }
 }

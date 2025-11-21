@@ -34,9 +34,9 @@
             <tr>
                 <td>{{ $item->product->name ?? 'N/A' }}</td>
                 <td>{{ $item->variant->sku ?? '-' }}</td>
-                <td class="text-right">{{ $item->qty }}</td>
-                <td class="text-right">{{ number_format($item->price, 2) }}</td>
-                <td class="text-right">{{ number_format($item->qty * $item->price, 2) }}</td>
+                <td class="text-right">{{ $item->quantity }}</td>
+                <td class="text-right">{{ number_format($item->unit_price, 2) }}</td>
+                <td class="text-right">{{ number_format($item->total_price, 2) }}</td>
             </tr>
         @endforeach
         </tbody>

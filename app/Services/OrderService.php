@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Events\InventoryLowStock;
 use App\Events\OrderStatusUpdated;
 use App\Models\Inventory;
 use App\Models\Order;
@@ -11,6 +12,7 @@ use App\Models\ProductVariant;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class OrderService
 {
@@ -71,15 +73,21 @@ class OrderService
                 $variant = null;
                 if (!empty($item['variant_id'])) {
                     $variant = ProductVariant::findOrFail($item['variant_id']);
+
+                    if ($variant->product_id !== $product->id) {
+                        throw ValidationException::withMessages([
+                            'variant_id' => "Variant {$variant->id} does not belong to product {$product->id}",
+                        ]);
+                    }
                 }
 
                 OrderItem::create([
-                    'order_id'          => $order->id,
-                    'product_id'        => $product->id,
+                    'order_id'           => $order->id,
+                    'product_id'         => $product->id,
                     'product_variant_id' => $variant?->id,
-                    'quantity'          => $item['qty'],
-                    'unit_price'        => $item['price'],
-                    'total_price'       => $item['qty'] * $item['price'],
+                    'quantity'           => $item['qty'],
+                    'unit_price'         => $item['price'],
+                    'total_price'        => $item['qty'] * $item['price'],
                 ]);
 
                 // inventory deduct (if variant)
@@ -93,6 +101,11 @@ class OrderService
 
                     $inventory->stock -= $item['qty'];
                     $inventory->save();
+
+                    // Fire low-stock event after deduction
+                    if ($inventory->stock <= $inventory->low_stock_threshold) {
+                        event(new InventoryLowStock($inventory));
+                    }
                 }
             }
 
@@ -124,7 +137,9 @@ class OrderService
         return DB::transaction(function () use ($order, $oldStatus, $newStatus) {
             // cancel হলে inventory rollback (আগের মতো)
             if ($newStatus === 'cancelled') {
-                $this->rollbackInventory($order);
+                $this->rollbackInventory(
+                    $order->items()->with('variant.inventory')->lockForUpdate()->get()
+                );
             }
 
             $order->status = $newStatus;

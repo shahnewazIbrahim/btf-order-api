@@ -1,0 +1,366 @@
+openapi: 3.0.3
+info:
+  title: BTF Order Management API
+  version: "1.0.0"
+  description: REST API for products, inventory, and orders with JWT auth.
+servers:
+  - url: http://localhost:8000/api/v1
+    description: Local
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+    RegisterRequest:
+      allOf:
+        - $ref: '#/components/schemas/LoginRequest'
+        - type: object
+          required: [name, password_confirmation, role]
+          properties:
+            name:
+              type: string
+            password_confirmation:
+              type: string
+            role:
+              type: string
+              enum: [Admin, Vendor, Customer]
+    Product:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        slug:
+          type: string
+        description:
+          type: string
+        base_price:
+          type: number
+          format: float
+        is_active:
+          type: boolean
+        variants:
+          type: array
+          items:
+            $ref: '#/components/schemas/Variant'
+    Variant:
+      type: object
+      properties:
+        id:
+          type: integer
+        sku:
+          type: string
+        name:
+          type: string
+        attributes:
+          type: object
+          additionalProperties: true
+        price:
+          type: number
+          format: float
+        inventory:
+          $ref: '#/components/schemas/Inventory'
+    Inventory:
+      type: object
+      properties:
+        stock:
+          type: integer
+        low_stock_threshold:
+          type: integer
+    OrderItem:
+      type: object
+      properties:
+        product_id:
+          type: integer
+        variant_id:
+          type: integer
+          nullable: true
+        qty:
+          type: integer
+        price:
+          type: number
+          format: float
+    OrderStatusRequest:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [pending, processing, shipped, delivered, cancelled]
+security:
+  - bearerAuth: []
+paths:
+  /auth/register:
+    post:
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '200':
+          description: Registered
+  /auth/login:
+    post:
+      summary: Login and receive JWT
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Authenticated
+  /products:
+    get:
+      summary: List products
+      parameters:
+        - in: query
+          name: search
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Paginated products
+    post:
+      security:
+        - bearerAuth: []
+      summary: Create product (Admin/Vendor)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, base_price]
+              properties:
+                name: { type: string }
+                description: { type: string }
+                base_price: { type: number, format: float }
+                is_active: { type: boolean }
+      responses:
+        '201':
+          description: Created
+  /products/{product}:
+    get:
+      summary: Get a product
+      parameters:
+        - name: product
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Product details
+    put:
+      security:
+        - bearerAuth: []
+      summary: Update product (Admin/Vendor owner)
+      parameters:
+        - name: product
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                description: { type: string }
+                base_price: { type: number, format: float }
+                is_active: { type: boolean }
+      responses:
+        '200':
+          description: Updated
+    delete:
+      security:
+        - bearerAuth: []
+      summary: Delete product (Admin/Vendor owner)
+      parameters:
+        - name: product
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '204':
+          description: Deleted
+  /products/import:
+    post:
+      security:
+        - bearerAuth: []
+      summary: Bulk import products from CSV (Admin/Vendor)
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '202':
+          description: Import queued
+  /products/{product}/variants:
+    get:
+      summary: List variants for a product
+      parameters:
+        - in: path
+          name: product
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Variants list
+    post:
+      security:
+        - bearerAuth: []
+      summary: Create variant (Admin/Vendor owner)
+      parameters:
+        - in: path
+          name: product
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [price]
+              properties:
+                sku: { type: string }
+                name: { type: string }
+                attributes: { type: object }
+                price: { type: number, format: float }
+                stock: { type: integer }
+                low_stock_threshold: { type: integer }
+      responses:
+        '201':
+          description: Created
+  /variants/{variant}/inventory:
+    get:
+      summary: Get inventory for variant
+      parameters:
+        - name: variant
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Inventory
+    put:
+      security:
+        - bearerAuth: []
+      summary: Update inventory (Admin/Vendor owner)
+      parameters:
+        - name: variant
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [stock]
+              properties:
+                stock: { type: integer }
+                low_stock_threshold: { type: integer }
+      responses:
+        '200':
+          description: Updated
+  /orders:
+    get:
+      security:
+        - bearerAuth: []
+      summary: List orders (role-based scope)
+      responses:
+        '200':
+          description: Paginated orders
+    post:
+      security:
+        - bearerAuth: []
+      summary: Create order (Customer/Admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [items]
+              properties:
+                discount: { type: number, format: float }
+                items:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/OrderItem'
+      responses:
+        '201':
+          description: Created
+  /orders/{order}:
+    get:
+      security:
+        - bearerAuth: []
+      summary: Get order (role-based scope)
+      parameters:
+        - name: order
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Order details
+  /orders/{order}/status:
+    post:
+      security:
+        - bearerAuth: []
+      summary: Update order status (Admin/Vendor owner)
+      parameters:
+        - name: order
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderStatusRequest'
+      responses:
+        '200':
+          description: Status updated
+  /orders/{order}/invoice:
+    get:
+      security:
+        - bearerAuth: []
+      summary: Download invoice PDF
+      parameters:
+        - name: order
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: PDF stream
