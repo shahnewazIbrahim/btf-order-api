@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Storefront — BTF Order Management')
+@section('title', 'Storefront ï¿½ BTF Order Management')
 
 @section('content')
     <div x-data="storefront()" class="space-y-10">
@@ -10,7 +10,7 @@
                 <div class="h-10 w-10 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold">B</div>
                 <div>
                     <p class="text-sm font-semibold text-slate-900">BTF Store</p>
-                    <p class="text-xs text-slate-500">Shop • Wishlist • Track</p>
+                    <p class="text-xs text-slate-500">Shop ï¿½ Wishlist ï¿½ Track</p>
                 </div>
             </div>
             <div class="flex flex-wrap items-center gap-2 text-xs">
@@ -61,10 +61,10 @@
         <section class="relative overflow-hidden rounded-3xl border border-slate-100 bg-gradient-to-r from-indigo-50 via-sky-50 to-white p-8 shadow-sm">
             <div class="grid gap-6 md:grid-cols-2 items-center">
                 <div class="space-y-4">
-                    <p class="text-xs uppercase tracking-[0.3em] text-slate-500">Live API • Real Orders</p>
+                    <p class="text-xs uppercase tracking-[0.3em] text-slate-500">Live API ï¿½ Real Orders</p>
                     <h1 class="text-4xl font-semibold text-slate-900 leading-tight">Unlock new arrivals with exclusive deals and fast checkout.</h1>
                     <p class="text-sm text-slate-600 max-w-xl">
-                        Browse products, pick variants, add to wishlist, and checkout securely. Every action hits your `/api/v1` endpoints—no mocks.
+                        Browse products, pick variants, add to wishlist, and checkout securely. Every action hits your `/api/v1` endpointsï¿½no mocks.
                     </p>
                     <div class="flex items-center gap-3">
                         <button @click="scrollToCatalog" class="px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700">Shop now</button>
@@ -283,7 +283,7 @@
                                     <template x-for="item in order.items" :key="item.id">
                                         <div>
                                             <span x-text="item.product?.name || 'Product'"></span>
-                                            <span class="text-slate-400">×</span>
+                                            <span class="text-slate-400">ï¿½</span>
                                             <span x-text="item.quantity"></span>
                                         </div>
                                     </template>
@@ -528,7 +528,7 @@
                 variantLabel(variant) {
                     const price = variant.price ?? 'N/A';
                     const attr = variant.name || variant.sku;
-                    return `${attr} • ${price}`;
+                    return `${attr} ï¿½ ${price}`;
                 },
 
                 selectVariant(productId, variantId) {
@@ -693,3 +693,4 @@
         });
     </script>
 @endsection
+ 
