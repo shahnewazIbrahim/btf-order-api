@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Repositories\ProductRepository;
 use App\Services\ProductService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
 {
@@ -43,11 +44,16 @@ class ProductController extends Controller
         $data = $request->validate([
             'name'       => 'required|string|max:255',
             'description' => 'nullable|string',
+            'image'      => 'nullable|image|max:2048',
             'base_price' => 'required|numeric|min:0',
             'is_active'  => 'boolean',
         ]);
 
         $data['user_id'] = $request->user('api')->id;
+
+        if ($request->hasFile('image')) {
+            $data['image_path'] = $request->file('image')->store('products', 'public');
+        }
 
         $product = $this->service->create($data);
 
@@ -66,9 +72,17 @@ class ProductController extends Controller
         $data = $request->validate([
             'name'       => 'sometimes|string|max:255',
             'description' => 'nullable|string',
+            'image'      => 'nullable|image|max:2048',
             'base_price' => 'sometimes|numeric|min:0',
             'is_active'  => 'sometimes|boolean',
         ]);
+
+        if ($request->hasFile('image')) {
+            if ($product->image_path) {
+                Storage::disk('public')->delete($product->image_path);
+            }
+            $data['image_path'] = $request->file('image')->store('products', 'public');
+        }
 
         $product = $this->service->update($product, $data);
 

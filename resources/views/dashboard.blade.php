@@ -29,7 +29,7 @@
         <div class="bg-white rounded-xl shadow-sm p-4 border border-slate-100">
             <div class="flex items-center justify-between mb-3">
                 <h2 class="text-sm font-semibold text-slate-800">Recent Products</h2>
-                <a href="{{ route('products.index') }}" class="text-xs text-indigo-600 hover:underline">
+                <a href="{{ route('admin.products.index') }}" class="text-xs text-indigo-600 hover:underline">
                     View all
                 </a>
             </div>
@@ -58,7 +58,7 @@
         <div class="bg-white rounded-xl shadow-sm p-4 border border-slate-100">
             <div class="flex items-center justify-between mb-3">
                 <h2 class="text-sm font-semibold text-slate-800">Recent Orders</h2>
-                <a href="{{ route('orders.index') }}" class="text-xs text-indigo-600 hover:underline">
+                <a href="{{ route('admin.orders.index') }}" class="text-xs text-indigo-600 hover:underline">
                     View all
                 </a>
             </div>

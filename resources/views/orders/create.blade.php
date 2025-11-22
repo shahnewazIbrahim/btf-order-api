@@ -10,13 +10,13 @@
                 Select quantities for products. Prices are taken from product base price.
             </p>
         </div>
-        <a href="{{ route('orders.index') }}" class="text-xs text-indigo-600 hover:underline">
+        <a href="{{ route('admin.orders.index') }}" class="text-xs text-indigo-600 hover:underline">
             Back to orders
         </a>
     </div>
 
     <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-5">
-        <form action="{{ route('orders.store.web') }}" method="POST" class="space-y-4">
+        <form action="{{ route('admin.orders.store.web') }}" method="POST" class="space-y-4">
             @csrf
 
             <div class="overflow-x-auto">

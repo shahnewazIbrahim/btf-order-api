@@ -11,13 +11,13 @@
                     This form uses the same ProductService used by the API.
                 </p>
             </div>
-            <a href="{{ route('products.index') }}" class="text-xs text-indigo-600 hover:underline">
+            <a href="{{ route('admin.products.index') }}" class="text-xs text-indigo-600 hover:underline">
                 Back to list
             </a>
         </div>
 
         <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-5">
-            <form action="{{ route('products.store') }}" method="POST" class="space-y-4">
+            <form action="{{ route('admin.products.store') }}" method="POST" class="space-y-4" enctype="multipart/form-data">
                 @csrf
 
                 <div class="space-y-1">
@@ -39,6 +39,16 @@
                         rows="3"
                         class="w-full rounded-md border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
                         placeholder="Optional short description...">{{ old('description') }}</textarea>
+                </div>
+
+                <div class="space-y-1">
+                    <label class="text-xs font-medium text-slate-700" for="image">Image</label>
+                    <input
+                        type="file"
+                        id="image"
+                        name="image"
+                        accept="image/*"
+                        class="w-full rounded-md border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500">
                 </div>
 
                 <div class="space-y-1">

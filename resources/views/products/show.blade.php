@@ -11,7 +11,7 @@
                     Basic product information from the database.
                 </p>
             </div>
-            <a href="{{ route('products.index') }}" class="text-xs text-indigo-600 hover:underline">
+            <a href="{{ route('admin.products.index') }}" class="text-xs text-indigo-600 hover:underline">
                 Back to list
             </a>
         </div>

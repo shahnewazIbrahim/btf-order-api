@@ -11,13 +11,13 @@
                     Update product information. This uses the same ProductService as API.
                 </p>
             </div>
-            <a href="{{ route('products.index') }}" class="text-xs text-indigo-600 hover:underline">
+            <a href="{{ route('admin.products.index') }}" class="text-xs text-indigo-600 hover:underline">
                 Back to list
             </a>
         </div>
 
         <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-5">
-            <form action="{{ route('products.update', $product) }}" method="POST" class="space-y-4">
+            <form action="{{ route('admin.products.update', $product) }}" method="POST" class="space-y-4" enctype="multipart/form-data">
                 @csrf
                 @method('PUT')
 
@@ -40,6 +40,19 @@
                         rows="3"
                         class="w-full rounded-md border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
                         placeholder="Optional short description...">{{ old('description', $product->description) }}</textarea>
+                </div>
+
+                <div class="space-y-1">
+                    <label class="text-xs font-medium text-slate-700" for="image">Image</label>
+                    <input
+                        type="file"
+                        id="image"
+                        name="image"
+                        accept="image/*"
+                        class="w-full rounded-md border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500">
+                    @if($product->image_path)
+                        <p class="text-[11px] text-slate-500">Current: <a class="text-indigo-600" href="{{ asset('storage/'.$product->image_path) }}" target="_blank">View</a></p>
+                    @endif
                 </div>
 
                 <div class="space-y-1">
@@ -66,7 +79,7 @@
                 </div>
 
                 <div class="flex items-center justify-between gap-3">
-                    <a href="{{ route('products.index') }}"
+                    <a href="{{ route('admin.products.index') }}"
                        class="inline-flex items-center justify-center rounded-md border border-slate-200 px-4 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50">
                         Cancel
                     </a>

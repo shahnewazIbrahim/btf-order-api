@@ -195,7 +195,15 @@ Ensure `.env.testing` points to a test DB.
 
 ---
 
-## 7) High-Level API Summary
+## 7) Frontend (Blade + Tailwind)
+
+- **Storefront**: `GET /store` — customer-facing experience. Login (JWT), browse products/variants (live API), add to cart, checkout (POST `/api/v1/orders`), and track your recent orders (GET `/api/v1/orders`).
+- **Admin UI**: `GET /products`, `GET /orders` — basic CRUD/overview.
+- **Auth for UI**: use seeded users (e.g., `customer@example.com` / `password`) or register via `/store` quick register.
+
+---
+
+## 8) High-Level API Summary
 
 ### Authentication
 - `POST /api/v1/auth/register`
@@ -232,7 +240,7 @@ Ensure `.env.testing` points to a test DB.
 
 ---
 
-## 8) Architecture Notes (Performance & Ops)
+## 9) Architecture Notes (Performance & Ops)
 
 - **Queues**: `QUEUE_CONNECTION=database` locally; run `php artisan queue:table && php artisan migrate` and keep `php artisan queue:work` running. For production, move to Redis/SQS and supervise workers.
 - **Rate limiting**: default API throttle (60 req/min) via `throttle:api`; adjust in `RouteServiceProvider` or add a custom limiter env if stricter limits are needed.
@@ -243,7 +251,7 @@ Ensure `.env.testing` points to a test DB.
 
 ---
 
-## 9) About the Author
+## 10) About the Author
 
 - **Name:** Your Name  
 - **Email:** your.email@example.com  
@@ -251,6 +259,6 @@ Ensure `.env.testing` points to a test DB.
 
 ---
 
-## 10) License
+## 11) License
 
 MIT License.

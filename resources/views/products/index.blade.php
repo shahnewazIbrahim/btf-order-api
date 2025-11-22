@@ -12,7 +12,7 @@
         </div>
 
         {{-- ✅ Add Product button --}}
-        <a href="{{ route('products.create') }}"
+        <a href="{{ route('admin.products.create') }}"
            class="inline-flex items-center rounded-md bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-700">
             + Add Product
         </a>
@@ -55,12 +55,12 @@
 
                         <td class="px-4 py-2 text-right text-xs">
                             <div class="inline-flex items-center gap-2">
-                                <a href="{{ route('products.edit', $product) }}"
+                                <a href="{{ route('admin.products.edit', $product) }}"
                                    class="px-2 py-1 rounded-md border border-slate-200 text-slate-700 hover:bg-slate-50">
                                     Edit
                                 </a>
 
-                                <form action="{{ route('products.destroy', $product) }}" method="POST"
+                                <form action="{{ route('admin.products.destroy', $product) }}" method="POST"
                                       onsubmit="return confirm('Are you sure you want to delete this product?')">
                                     @csrf
                                     @method('DELETE')

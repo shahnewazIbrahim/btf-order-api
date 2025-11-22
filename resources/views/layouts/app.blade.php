@@ -24,17 +24,13 @@
 
             <div class="flex items-center gap-4">
                 <nav class="hidden md:flex items-center gap-3 text-sm">
-                    <a href="{{ route('dashboard') }}"
-                       class="px-3 py-1 rounded-md {{ request()->routeIs('dashboard') ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-100' }}">
-                        Dashboard
+                    <a href="{{ route('store') }}"
+                       class="px-3 py-1 rounded-md {{ request()->routeIs('store') ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-100' }}">
+                        Store
                     </a>
-                    <a href="{{ route('products.index') }}"
-                       class="px-3 py-1 rounded-md {{ request()->routeIs('products.*') ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-100' }}">
-                        Products
-                    </a>
-                    <a href="{{ route('orders.index') }}"
-                       class="px-3 py-1 rounded-md {{ request()->routeIs('orders.*') ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-100' }}">
-                        Orders
+                    <a href="{{ route('admin.dashboard') }}"
+                       class="px-3 py-1 rounded-md {{ request()->routeIs('admin.*') ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-100' }}">
+                        Admin
                     </a>
                 </nav>
 

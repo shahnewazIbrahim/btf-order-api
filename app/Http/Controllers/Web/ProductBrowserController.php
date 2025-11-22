@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Services\ProductService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class ProductBrowserController extends Controller
 {
@@ -38,6 +39,7 @@ class ProductBrowserController extends Controller
         $data = $request->validate([
             'name'        => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
+            'image'       => ['nullable', 'image', 'max:2048'],
             'base_price'  => ['required', 'numeric', 'min:0'],
             'is_active'   => ['sometimes', 'boolean'],
         ]);
@@ -45,10 +47,14 @@ class ProductBrowserController extends Controller
         $data['user_id']   = auth('web')->id();
         $data['is_active'] = $request->boolean('is_active');
 
+        if ($request->hasFile('image')) {
+            $data['image_path'] = $request->file('image')->store('products', 'public');
+        }
+
         $this->productService->create($data);
 
         return redirect()
-            ->route('products.index')
+            ->route('admin.products.index')
             ->with('success', 'Product created successfully.');
     }
 
@@ -91,16 +97,24 @@ class ProductBrowserController extends Controller
         $data = $request->validate([
             'name'        => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
+            'image'       => ['nullable', 'image', 'max:2048'],
             'base_price'  => ['required', 'numeric', 'min:0'],
             'is_active'   => ['sometimes', 'boolean'],
         ]);
 
         $data['is_active'] = $request->boolean('is_active');
 
+        if ($request->hasFile('image')) {
+            if ($product->image_path) {
+                Storage::disk('public')->delete($product->image_path);
+            }
+            $data['image_path'] = $request->file('image')->store('products', 'public');
+        }
+
         $this->productService->update($product, $data);
 
         return redirect()
-            ->route('products.index')
+            ->route('admin.products.index')
             ->with('success', 'Product updated successfully.');
     }
 
@@ -119,7 +133,7 @@ class ProductBrowserController extends Controller
         $this->productService->delete($product);
 
         return redirect()
-            ->route('products.index')
+            ->route('admin.products.index')
             ->with('success', 'Product deleted successfully.');
     }
 }
