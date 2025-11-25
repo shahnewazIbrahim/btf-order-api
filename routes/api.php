@@ -21,6 +21,9 @@ Route::prefix('v1')
         Route::post('auth/login', [AuthController::class, 'login'])
             ->name('auth.login');    // api.auth.login
 
+        Route::apiResource('products', ProductController::class)
+            ->names('products'); // api.products.index, api.products.store, ...
+            
         Route::middleware('auth:api')->group(function () {
             Route::get('auth/me', [AuthController::class, 'me'])
                 ->name('auth.me');         // api.auth.me
@@ -30,8 +33,6 @@ Route::prefix('v1')
                 ->name('auth.logout');     // api.auth.logout
 
             // ---------- Products ----------
-            Route::apiResource('products', ProductController::class)
-                ->names('products'); // api.products.index, api.products.store, ...
             Route::post('products/import', [ProductController::class, 'import'])
                 ->name('products.import');
 
